@@ -12,6 +12,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
+import static com.mongodb.client.model.Filters.eq;
+import static com.mongodb.client.model.Filters.gte;
+
 public class Create {
 
     private static final Random rand = new Random();
@@ -19,12 +22,33 @@ public class Create {
     public static void main(String[] args) {
         try (MongoClient mongoClient = MongoClients.create(System.getProperty("mongodb.uri"))) {
 
-            MongoDatabase sampleTrainingDB = mongoClient.getDatabase("sample_training");
-            MongoCollection<Document> gradesCollection = sampleTrainingDB.getCollection("grades");
+            MongoDatabase originalDB = mongoClient.getDatabase("Lab_3");
+            MongoDatabase finalDB = mongoClient.getDatabase("Lab_3_Star");
+            MongoCollection<Document> originalCollection = originalDB.getCollection("Video_Recordings");
+            MongoCollection<Document> newCollection = finalDB.getCollection("Video_Recordings");
 
-            insertOneDocument(gradesCollection);
-            insertManyDocuments(gradesCollection);
+
+            // List all collections in the database
+            for (String collectionName : originalDB.listCollectionNames()) {
+                System.out.println("Collection: " + collectionName);
+            }
+
+            createDirectorCollection(originalCollection, newCollection);
         }
+    }
+
+    private static void createDirectorCollection(MongoCollection<Document> originalCollection, MongoCollection<Document> newCollection) {
+        List<Document> factTableData = new ArrayList<>();
+        for (Document recordings : originalCollection.find()) {
+            Document recordingEntry = new Document("recording_id", recordings.getInteger("recording_id"))
+                    .append("title", recordings.getString("title"))
+                    .append("image_name", recordings.getString("image_name"))
+                    .append("duration", recordings.getInteger("duration"))
+                    .append("year_released", recordings.getInteger("year_released"));
+            factTableData.add(recordingEntry);
+        }
+        // Insert into the fact collection
+        newCollection.insertMany(factTableData);
     }
 
     private static void insertOneDocument(MongoCollection<Document> gradesCollection) {
