@@ -6,6 +6,7 @@ import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.InsertManyOptions;
 import org.bson.Document;
+import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
 
 import java.util.ArrayList;
@@ -33,7 +34,31 @@ public class Create {
 
             createVideoRecordingCollection(originalDB, finalDB);
             createCategoriesCollection(originalDB, finalDB);
+            createActorsCollection(originalDB, finalDB);
         }
+    }
+
+    private static void createActorsCollection(MongoDatabase originalDB, MongoDatabase finalDB){
+        MongoCollection<Document> originalCollection = originalDB.getCollection("Video_Actors");
+        MongoCollection<Document> newCollection = finalDB.getCollection("Video_Actors");
+
+        List<Document> actorData = new ArrayList<>();
+        for(Document actor : originalCollection.find()){
+            //Filter by actor name
+            Bson filter = eq("name", actor.get("name"));
+
+            //Create a list of recording ids by searching the actors name and adding associated ids
+            List<Integer> recording_ids = new ArrayList<>();
+            originalCollection.find(filter).forEach(doc -> {
+                recording_ids.add(doc.getInteger("recording_id"));
+            });
+
+            Document actorEntry = new Document("name", actor.getString("name"))
+                    .append("Movies", recording_ids);
+            actorData.add(actorEntry);
+        }
+        //Insert into the new actor collection
+        newCollection.insertMany(actorData);
     }
 
     private static void createCategoriesCollection(MongoDatabase originalDB, MongoDatabase finalDB){
