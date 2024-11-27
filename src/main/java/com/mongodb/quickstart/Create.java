@@ -10,6 +10,7 @@ import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 
@@ -35,7 +36,30 @@ public class Create {
             createVideoRecordingCollection(originalDB, finalDB);
             createCategoriesCollection(originalDB, finalDB);
             createActorsCollection(originalDB, finalDB);
+            createRatingsCollection(originalDB, finalDB);
         }
+    }
+
+    private static void createRatingsCollection(MongoDatabase originalDB, MongoDatabase finalDB){
+        MongoCollection<Document> originalCollection = originalDB.getCollection("Video_Recordings");
+        MongoCollection<Document> newCollection = finalDB.getCollection("Video_Ratings");
+        List<String> ratings = Arrays.asList("PG", "PG-13", "R", "NR");
+
+        List<Document> ratingData = new ArrayList<>();
+        for(String rating : ratings){
+            Bson filter = eq("rating", rating);
+
+            List<Integer> recording_ids = new ArrayList<>();
+            originalCollection.find(filter).forEach(doc -> {
+                recording_ids.add(doc.getInteger("recording_id"));
+            });
+
+            Document ratingEntry = new Document("rating", rating)
+                    .append("recording_ids", recording_ids);
+            ratingData.add(ratingEntry);
+        }
+
+        newCollection.insertMany(ratingData);
     }
 
     private static void createActorsCollection(MongoDatabase originalDB, MongoDatabase finalDB){
