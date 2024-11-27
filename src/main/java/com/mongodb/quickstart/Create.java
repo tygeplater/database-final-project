@@ -37,12 +37,50 @@ public class Create {
             createCategoriesCollection(originalDB, finalDB);
             createActorsCollection(originalDB, finalDB);
             createRatingsCollection(originalDB, finalDB);
+            createDirectorCollection(originalDB, finalDB);
         }
+    }
+    private static void createFactTable(MongoDatabase originalDB, MongoDatabase finalDB){
+
+    }
+
+    private static void createDirectorCollection(MongoDatabase originalDB, MongoDatabase finalDB) {
+        MongoCollection<Document> originalCollection = originalDB.getCollection("Video_Recordings");
+        MongoCollection<Document> newCollection = finalDB.getCollection("Video_Directors");
+
+        newCollection.deleteMany(new Document());
+
+        List<String> directorNames = new ArrayList<>();
+        for(Document movie: originalCollection.find()){
+            if(!directorNames.contains(movie.getString("director"))){
+                directorNames.add(movie.getString("director"));
+            }
+        }
+
+        List<Document> directors = new ArrayList<>();
+        for(String directorName : directorNames){
+            //Filter by actor name
+            Bson filter = eq("director", directorName);
+
+            //Create a list of recording ids by searching the actors name and adding associated ids
+            List<Integer> recording_ids = new ArrayList<>();
+            originalCollection.find(filter).forEach(doc -> {
+                recording_ids.add(doc.getInteger("recording_id"));
+            });
+
+            Document directorEntry = new Document("director", directorName)
+                    .append("Movies", recording_ids);
+            directors.add(directorEntry);
+
+        }
+        //Insert into the new actor collection
+        newCollection.insertMany(directors);
     }
 
     private static void createRatingsCollection(MongoDatabase originalDB, MongoDatabase finalDB){
         MongoCollection<Document> originalCollection = originalDB.getCollection("Video_Recordings");
         MongoCollection<Document> newCollection = finalDB.getCollection("Video_Ratings");
+        newCollection.deleteMany(new Document());
         List<String> ratings = Arrays.asList("PG", "PG-13", "R", "NR");
 
         List<Document> ratingData = new ArrayList<>();
@@ -65,6 +103,7 @@ public class Create {
     private static void createActorsCollection(MongoDatabase originalDB, MongoDatabase finalDB){
         MongoCollection<Document> originalCollection = originalDB.getCollection("Video_Actors");
         MongoCollection<Document> newCollection = finalDB.getCollection("Video_Actors");
+        newCollection.deleteMany(new Document());
 
         List<Document> actorData = new ArrayList<>();
         for(Document actor : originalCollection.find()){
@@ -88,6 +127,7 @@ public class Create {
     private static void createCategoriesCollection(MongoDatabase originalDB, MongoDatabase finalDB){
         MongoCollection<Document> originalCollection = originalDB.getCollection("Video_Categories");
         MongoCollection<Document> newCollection = finalDB.getCollection("Video_Categories");
+        newCollection.deleteMany(new Document());
 
         List<Document> categoryData = new ArrayList<>();
         for(Document categories : originalCollection.find()){
@@ -102,6 +142,7 @@ public class Create {
     private static void createVideoRecordingCollection(MongoDatabase originalDB, MongoDatabase finalDB) {
         MongoCollection<Document> originalCollection = originalDB.getCollection("Video_Recordings");
         MongoCollection<Document> newCollection = finalDB.getCollection("Video_Recordings");
+        newCollection.deleteMany(new Document());
 
         List<Document> recordingData = new ArrayList<>();
         for (Document recordings : originalCollection.find()) {
