@@ -24,8 +24,6 @@ public class Create {
 
             MongoDatabase originalDB = mongoClient.getDatabase("Lab_3");
             MongoDatabase finalDB = mongoClient.getDatabase("Lab_3_Star");
-            MongoCollection<Document> originalCollection = originalDB.getCollection("Video_Recordings");
-            MongoCollection<Document> newCollection = finalDB.getCollection("Video_Recordings");
 
 
             // List all collections in the database
@@ -33,22 +31,40 @@ public class Create {
                 System.out.println("Collection: " + collectionName);
             }
 
-            createDirectorCollection(originalCollection, newCollection);
+            createVideoRecordingCollection(originalDB, finalDB);
+            createCategoriesCollection(originalDB, finalDB);
         }
     }
 
-    private static void createDirectorCollection(MongoCollection<Document> originalCollection, MongoCollection<Document> newCollection) {
-        List<Document> factTableData = new ArrayList<>();
+    private static void createCategoriesCollection(MongoDatabase originalDB, MongoDatabase finalDB){
+        MongoCollection<Document> originalCollection = originalDB.getCollection("Video_Categories");
+        MongoCollection<Document> newCollection = finalDB.getCollection("Video_Categories");
+
+        List<Document> categoryData = new ArrayList<>();
+        for(Document categories : originalCollection.find()){
+            Document categoryEntry = new Document("category_id", categories.getInteger("id"))
+                    .append("name", categories.getString("name"));
+            categoryData.add(categoryEntry);
+        }
+        // Insert into the category collection
+        newCollection.insertMany(categoryData);
+    }
+
+    private static void createVideoRecordingCollection(MongoDatabase originalDB, MongoDatabase finalDB) {
+        MongoCollection<Document> originalCollection = originalDB.getCollection("Video_Recordings");
+        MongoCollection<Document> newCollection = finalDB.getCollection("Video_Recordings");
+
+        List<Document> recordingData = new ArrayList<>();
         for (Document recordings : originalCollection.find()) {
             Document recordingEntry = new Document("recording_id", recordings.getInteger("recording_id"))
                     .append("title", recordings.getString("title"))
                     .append("image_name", recordings.getString("image_name"))
                     .append("duration", recordings.getInteger("duration"))
                     .append("year_released", recordings.getInteger("year_released"));
-            factTableData.add(recordingEntry);
+            recordingData.add(recordingEntry);
         }
         // Insert into the fact collection
-        newCollection.insertMany(factTableData);
+        newCollection.insertMany(recordingData);
     }
 
     private static void insertOneDocument(MongoCollection<Document> gradesCollection) {
