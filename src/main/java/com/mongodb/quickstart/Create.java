@@ -20,28 +20,23 @@ public class Create {
 
     public static void main(String[] args) {
         try (MongoClient mongoClient = MongoClients.create(System.getProperty("mongodb.uri"))) {
-
             MongoDatabase originalDB = mongoClient.getDatabase("Lab_3");
             MongoDatabase finalDB = mongoClient.getDatabase("Lab_3_Star");
-
-
-            // List all collections in the database
-            for (String collectionName : originalDB.listCollectionNames()) {
-                System.out.println("Collection: " + collectionName);
-            }
 
             createVideoRecordingCollection(originalDB, finalDB);
             createCategoriesCollection(originalDB, finalDB);
             createActorsCollection(originalDB, finalDB);
             createRatingsCollection(originalDB, finalDB);
             createDirectorCollection(originalDB, finalDB);
+            createFactTable(originalDB, finalDB);
         }
     }
     private static void createFactTable(MongoDatabase originalDB, MongoDatabase finalDB){
-
+        System.out.println("...fact table not implemented yet...");
     }
 
     private static void createDirectorCollection(MongoDatabase originalDB, MongoDatabase finalDB) {
+        System.out.println("creating director collection");
         MongoCollection<Document> originalCollection = originalDB.getCollection("Video_Recordings");
         MongoCollection<Document> newCollection = finalDB.getCollection("Video_Directors");
 
@@ -75,6 +70,7 @@ public class Create {
     }
 
     private static void createRatingsCollection(MongoDatabase originalDB, MongoDatabase finalDB){
+        System.out.println("creating ratings collection");
         MongoCollection<Document> originalCollection = originalDB.getCollection("Video_Recordings");
         MongoCollection<Document> newCollection = finalDB.getCollection("Video_Ratings");
         newCollection.deleteMany(new Document());
@@ -98,6 +94,7 @@ public class Create {
     }
 
     private static void createActorsCollection(MongoDatabase originalDB, MongoDatabase finalDB){
+        System.out.println("creating actors collection");
         MongoCollection<Document> originalCollection = originalDB.getCollection("Video_Actors");
         MongoCollection<Document> newCollection = finalDB.getCollection("Video_Actors");
         newCollection.deleteMany(new Document());
@@ -131,6 +128,7 @@ public class Create {
     }
 
     private static void createCategoriesCollection(MongoDatabase originalDB, MongoDatabase finalDB){
+        System.out.println("creating categories collection");
         MongoCollection<Document> originalCollection = originalDB.getCollection("Video_Categories");
         MongoCollection<Document> newCollection = finalDB.getCollection("Video_Categories");
         newCollection.deleteMany(new Document());
@@ -146,6 +144,7 @@ public class Create {
     }
 
     private static void createVideoRecordingCollection(MongoDatabase originalDB, MongoDatabase finalDB) {
+        System.out.println("creating recordings collection");
         MongoCollection<Document> originalCollection = originalDB.getCollection("Video_Recordings");
         MongoCollection<Document> newCollection = finalDB.getCollection("Video_Recordings");
         newCollection.deleteMany(new Document());
@@ -161,30 +160,5 @@ public class Create {
         }
         // Insert into the fact collection
         newCollection.insertMany(recordingData);
-    }
-
-    private static void insertOneDocument(MongoCollection<Document> gradesCollection) {
-        gradesCollection.insertOne(generateNewGrade(10000d, 1d));
-        System.out.println("One grade inserted for studentId 10000.");
-    }
-
-    private static void insertManyDocuments(MongoCollection<Document> gradesCollection) {
-        List<Document> grades = new ArrayList<>();
-        for (double classId = 1d; classId <= 10d; classId++) {
-            grades.add(generateNewGrade(10001d, classId));
-        }
-
-        gradesCollection.insertMany(grades, new InsertManyOptions().ordered(false));
-        System.out.println("Ten grades inserted for studentId 10001.");
-    }
-
-    private static Document generateNewGrade(double studentId, double classId) {
-        List<Document> scores = List.of(new Document("type", "exam").append("score", rand.nextDouble() * 100),
-                                        new Document("type", "quiz").append("score", rand.nextDouble() * 100),
-                                        new Document("type", "homework").append("score", rand.nextDouble() * 100),
-                                        new Document("type", "homework").append("score", rand.nextDouble() * 100));
-        return new Document("_id", new ObjectId()).append("student_id", studentId)
-                                                  .append("class_id", classId)
-                                                  .append("scores", scores);
     }
 }
