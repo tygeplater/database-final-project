@@ -105,10 +105,18 @@ public class Create {
         MongoCollection<Document> newCollection = finalDB.getCollection("Video_Actors");
         newCollection.deleteMany(new Document());
 
+
+        List<String> actorNames = new ArrayList<>();
+        for(Document actorDoc: originalCollection.find()){
+            if(!actorNames.contains(actorDoc.getString("name"))){
+                actorNames.add(actorDoc.getString("name"));
+            }
+        }
+
         List<Document> actorData = new ArrayList<>();
-        for(Document actor : originalCollection.find()){
+        for(String actorName : actorNames){
             //Filter by actor name
-            Bson filter = eq("name", actor.get("name"));
+            Bson filter = eq("name", actorName);
 
             //Create a list of recording ids by searching the actors name and adding associated ids
             List<Integer> recording_ids = new ArrayList<>();
@@ -116,7 +124,7 @@ public class Create {
                 recording_ids.add(doc.getInteger("recording_id"));
             });
 
-            Document actorEntry = new Document("name", actor.getString("name"))
+            Document actorEntry = new Document("name", actorName)
                     .append("Movies", recording_ids);
             actorData.add(actorEntry);
         }
