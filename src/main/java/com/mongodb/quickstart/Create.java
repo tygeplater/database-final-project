@@ -9,10 +9,7 @@ import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 
 import static com.mongodb.client.model.Filters.eq;
 import static com.mongodb.client.model.Filters.gte;
@@ -106,15 +103,15 @@ public class Create {
         newCollection.deleteMany(new Document());
 
 
-        List<String> actorNames = new ArrayList<>();
+        Map<String, Integer> actorIdMap = new TreeMap<>();
         for(Document actorDoc: originalCollection.find()){
-            if(!actorNames.contains(actorDoc.getString("name"))){
-                actorNames.add(actorDoc.getString("name"));
+            if(!actorIdMap.containsKey(actorDoc.getString("name"))) {
+                actorIdMap.put(actorDoc.getString("name"), actorDoc.getInteger("id"));
             }
         }
 
         List<Document> actorData = new ArrayList<>();
-        for(String actorName : actorNames){
+        for(String actorName : actorIdMap.keySet()){
             //Filter by actor name
             Bson filter = eq("name", actorName);
 
@@ -125,7 +122,8 @@ public class Create {
             });
 
             Document actorEntry = new Document("name", actorName)
-                    .append("Movies", recording_ids);
+                    .append("Movies", recording_ids)
+                    .append("id", actorIdMap.get(actorName));
             actorData.add(actorEntry);
         }
         //Insert into the new actor collection
