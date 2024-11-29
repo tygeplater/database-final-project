@@ -28,9 +28,28 @@ public class Create {
             createActorsCollection(originalDB, finalDB);
             createRatingsCollection(originalDB, finalDB);
             createDirectorCollection(originalDB, finalDB);
+            createInventoryCollection(originalDB, finalDB);
             createFactTable(originalDB, finalDB);
         }
     }
+
+    private static void createInventoryCollection(MongoDatabase originalDB, MongoDatabase finalDB) {
+        System.out.println("creating inventory collection");
+        MongoCollection<Document> originalCollection = originalDB.getCollection("Video_Recordings");
+        MongoCollection<Document> newCollection = finalDB.getCollection("Inventory");
+        newCollection.deleteMany(new Document());
+
+        List<Document> recordingData = new ArrayList<>();
+        for (Document recordings : originalCollection.find()) {
+            Document recordingEntry = new Document("recording_id", recordings.getInteger("recording_id"))
+                    .append("stock_count", recordings.getInteger("stock_count"))
+                    .append("price", recordings.getInteger("price"));
+            recordingData.add(recordingEntry);
+        }
+        // Insert into the fact collection
+        newCollection.insertMany(recordingData);
+    }
+
     private static void createFactTable(MongoDatabase originalDB, MongoDatabase finalDB){
         System.out.println("...fact table not implemented yet...");
     }
@@ -118,9 +137,9 @@ public class Create {
                 recording_ids.add(doc.getInteger("recording_id"));
             });
 
-            Document actorEntry = new Document("name", actorName)
-                    .append("Movies", recording_ids)
-                    .append("id", actorIdMap.get(actorName));
+            Document actorEntry = new Document("id", actorIdMap.get(actorName))
+                    .append("name", actorName)
+                    .append("Movies", recording_ids);
             actorData.add(actorEntry);
         }
         //Insert into the new actor collection
