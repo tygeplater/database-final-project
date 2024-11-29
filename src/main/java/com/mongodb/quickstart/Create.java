@@ -15,9 +15,6 @@ import static com.mongodb.client.model.Filters.eq;
 import static com.mongodb.client.model.Filters.gte;
 
 public class Create {
-
-    private static final Random rand = new Random();
-
     public static void main(String[] args) {
         try (MongoClient mongoClient = MongoClients.create(System.getProperty("mongodb.uri"))) {
             MongoDatabase originalDB = mongoClient.getDatabase("Lab_3");
@@ -36,7 +33,7 @@ public class Create {
     private static void createInventoryCollection(MongoDatabase originalDB, MongoDatabase finalDB) {
         System.out.println("creating inventory collection");
         MongoCollection<Document> originalCollection = originalDB.getCollection("Video_Recordings");
-        MongoCollection<Document> newCollection = finalDB.getCollection("Inventory");
+        MongoCollection<Document> newCollection = finalDB.getCollection("Dim_Inventory");
         newCollection.deleteMany(new Document());
 
         List<Document> recordingData = new ArrayList<>();
@@ -57,7 +54,7 @@ public class Create {
     private static void createDirectorCollection(MongoDatabase originalDB, MongoDatabase finalDB) {
         System.out.println("creating director collection");
         MongoCollection<Document> originalCollection = originalDB.getCollection("Video_Recordings");
-        MongoCollection<Document> newCollection = finalDB.getCollection("Video_Directors");
+        MongoCollection<Document> newCollection = finalDB.getCollection("Dim_Directors");
 
         newCollection.deleteMany(new Document());
 
@@ -91,7 +88,7 @@ public class Create {
     private static void createRatingsCollection(MongoDatabase originalDB, MongoDatabase finalDB){
         System.out.println("creating ratings collection");
         MongoCollection<Document> originalCollection = originalDB.getCollection("Video_Recordings");
-        MongoCollection<Document> newCollection = finalDB.getCollection("Video_Ratings");
+        MongoCollection<Document> newCollection = finalDB.getCollection("Dim_Ratings");
         newCollection.deleteMany(new Document());
         List<String> ratings = Arrays.asList("PG", "PG-13", "R", "NR");
 
@@ -115,7 +112,7 @@ public class Create {
     private static void createActorsCollection(MongoDatabase originalDB, MongoDatabase finalDB){
         System.out.println("creating actors collection");
         MongoCollection<Document> originalCollection = originalDB.getCollection("Video_Actors");
-        MongoCollection<Document> newCollection = finalDB.getCollection("Video_Actors");
+        MongoCollection<Document> newCollection = finalDB.getCollection("Dim_Actors");
         newCollection.deleteMany(new Document());
 
 
@@ -149,7 +146,7 @@ public class Create {
     private static void createCategoriesCollection(MongoDatabase originalDB, MongoDatabase finalDB){
         System.out.println("creating categories collection");
         MongoCollection<Document> originalCollection = originalDB.getCollection("Video_Categories");
-        MongoCollection<Document> newCollection = finalDB.getCollection("Video_Categories");
+        MongoCollection<Document> newCollection = finalDB.getCollection("Dim_Categories");
         newCollection.deleteMany(new Document());
 
         List<Document> categoryData = new ArrayList<>();
@@ -165,7 +162,7 @@ public class Create {
     private static void createVideoRecordingCollection(MongoDatabase originalDB, MongoDatabase finalDB) {
         System.out.println("creating recordings collection");
         MongoCollection<Document> originalCollection = originalDB.getCollection("Video_Recordings");
-        MongoCollection<Document> newCollection = finalDB.getCollection("Video_Recordings");
+        MongoCollection<Document> newCollection = finalDB.getCollection("Dim_Recordings");
         newCollection.deleteMany(new Document());
 
         List<Document> recordingData = new ArrayList<>();
