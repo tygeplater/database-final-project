@@ -25,30 +25,69 @@ public class Create {
             createActorsCollection(originalDB, finalDB);
             createRatingsCollection(originalDB, finalDB);
             createDirectorCollection(originalDB, finalDB);
-            createInventoryCollection(originalDB, finalDB);
             createFactTable(originalDB, finalDB);
         }
     }
 
-    private static void createInventoryCollection(MongoDatabase originalDB, MongoDatabase finalDB) {
-        System.out.println("creating inventory collection");
-        MongoCollection<Document> originalCollection = originalDB.getCollection("Video_Recordings");
-        MongoCollection<Document> newCollection = finalDB.getCollection("Dim_Inventory");
-        newCollection.deleteMany(new Document());
-
-        List<Document> recordingData = new ArrayList<>();
-        for (Document recordings : originalCollection.find()) {
-            Document recordingEntry = new Document("recording_id", recordings.getInteger("recording_id"))
-                    .append("stock_count", recordings.getInteger("stock_count"))
-                    .append("price", recordings.getInteger("price"));
-            recordingData.add(recordingEntry);
-        }
-        // Insert into the fact collection
-        newCollection.insertMany(recordingData);
-    }
-
     private static void createFactTable(MongoDatabase originalDB, MongoDatabase finalDB){
-        System.out.println("...fact table not implemented yet...");
+        System.out.println("creating fact collection");
+        MongoCollection<Document> originalCollection = originalDB.getCollection("Video_Actors");
+        MongoCollection<Document> factCollection = finalDB.getCollection("Fact_Collection");
+        MongoCollection<Document> dim_actors = finalDB.getCollection("Dim_Actors");
+        MongoCollection<Document> dim_recordings = finalDB.getCollection("Dim_Recordings");
+        MongoCollection<Document> dim_ratings = finalDB.getCollection("Dim_Ratings");
+        MongoCollection<Document> dim_categories = finalDB.getCollection("Dim_Categories");
+        MongoCollection<Document> dim_directors = finalDB.getCollection("Dim_Directors");
+
+        // clear Fact_Collection if already exists
+        factCollection.deleteMany(new Document());
+
+        // loop over Video_Actors
+        List<Document> fact_records = new ArrayList<>();
+        for(Document original: originalCollection.find()){
+            // need to get
+
+            // actor id
+            String actor_name = original.getString("name");
+            Bson filter = eq("name", actor_name);
+            ObjectId obj_actor_id = dim_actors.find(filter).first().getObjectId("_id");
+
+            // recording id
+            int recording_id = original.getInteger("recording_id");
+            filter = eq("recording_id", recording_id);
+            ObjectId obj_recording_id = dim_recordings.find(filter).first().getObjectId("_id");
+
+            // get the recording entry from original db
+            MongoCollection<Document> video_recordings = originalDB.getCollection("Video_Recordings");
+            filter = eq("recording_id", recording_id);
+            Document video_recording = video_recordings.find(filter).first();
+
+            // rating id
+            String rating = video_recording.getString("rating");
+            filter = eq("rating", rating);
+            ObjectId rating_id = dim_ratings.find(filter).first().getObjectId("_id");
+
+            // category id
+            String category = video_recording.getString("category");
+            filter = eq("name", category);
+            ObjectId category_id = dim_categories.find(filter).first().getObjectId("_id");
+
+            // director id
+            String director = video_recording.getString("director");
+            filter = eq("director", director);
+            ObjectId director_id = dim_directors.find(filter).first().getObjectId("_id");
+
+            // assemble partial document
+            Document factEntry = new Document("actor_id", obj_actor_id)
+                    .append("recording_id", obj_recording_id)
+                    .append("rating_id", rating_id)
+                    .append("category_id", category_id)
+                    .append("director_id", director_id);
+
+            fact_records.add(factEntry);
+        }
+        //Insert into the new actor collection
+        factCollection.insertMany(fact_records);
     }
 
     private static void createDirectorCollection(MongoDatabase originalDB, MongoDatabase finalDB) {
@@ -171,7 +210,9 @@ public class Create {
                     .append("title", recordings.getString("title"))
                     .append("image_name", recordings.getString("image_name"))
                     .append("duration", recordings.getInteger("duration"))
-                    .append("year_released", recordings.getInteger("year_released"));
+                    .append("year_released", recordings.getInteger("year_released"))
+                    .append("stock_count", recordings.getInteger("stock_count"))
+                    .append("price", recordings.getInteger("price"));
             recordingData.add(recordingEntry);
         }
         // Insert into the fact collection
