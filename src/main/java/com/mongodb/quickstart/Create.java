@@ -115,8 +115,8 @@ public class Create {
                 recording_ids.add(doc.getInteger("recording_id"));
             });
 
-            Document directorEntry = new Document("director", directorName)
-                    .append("Movies", recording_ids);
+            Document directorEntry = new Document("director", directorName);
+                    //.append("Movies", recording_ids);
             directors.add(directorEntry);
 
         }
@@ -140,8 +140,8 @@ public class Create {
                 recording_ids.add(doc.getInteger("recording_id"));
             });
 
-            Document ratingEntry = new Document("rating", rating)
-                    .append("recording_ids", recording_ids);
+            Document ratingEntry = new Document("rating", rating);
+                    //.append("recording_ids", recording_ids);
             ratingData.add(ratingEntry);
         }
 
@@ -174,8 +174,8 @@ public class Create {
             });
 
             Document actorEntry = new Document("id", actorIdMap.get(actorName))
-                    .append("name", actorName)
-                    .append("Movies", recording_ids);
+                    .append("name", actorName);
+                    //.append("Movies", recording_ids);
             actorData.add(actorEntry);
         }
         //Insert into the new actor collection
