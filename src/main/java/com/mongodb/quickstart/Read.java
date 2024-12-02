@@ -1,10 +1,7 @@
 package com.mongodb.quickstart;
 
 import com.mongodb.client.*;
-import com.mongodb.client.model.Aggregates;
-import com.mongodb.client.model.Field;
-import com.mongodb.client.model.Projections;
-import com.mongodb.client.model.UnwindOptions;
+import com.mongodb.client.model.*;
 import org.bson.Document;
 
 import java.util.ArrayList;
@@ -32,7 +29,9 @@ public class Read {
             categories = finalDB.getCollection("Dim_Categories");
             directors = finalDB.getCollection("Dim_Directors");
 
-            query1();
+            //query1();
+            query3();
+            //query5();
 
             /* examples:
             // find one document with Filters.eq()
@@ -86,4 +85,90 @@ public class Read {
         System.out.println("number of results: " + length);
 
     }
+    /*
+    List the number of videos for each video category.
+     */
+    private static void query3(){
+        AggregateIterable<Document> result = categories.aggregate(Arrays.asList(
+                Aggregates.lookup(
+                        "Fact_Collection",
+                        "_id",
+                        "category_id",
+                        "facts"
+                ),
+                Aggregates.unwind("$facts", new UnwindOptions().preserveNullAndEmptyArrays(false)),
+                Aggregates.group("$_id", Accumulators.sum("movieCount", 1))
+        ));
+
+        System.out.println(result);
+    }
+
+    /*
+    List the number of videos for each video category where the inventory is non-zero
+    inventory is in recording
+    categorys are in category
+     */
+    private static void query4(){
+
+    }
+
+    /*
+    For each actor, list the video categories that actor has appeared in.
+     */
+    private static void query5(){
+        // Perform Aggregation
+        AggregateIterable<Document> result = actors.aggregate(Arrays.asList(
+                // Step 1: Join dim_actors with fact_collection
+                Aggregates.lookup(
+                        "Fact_Collection",  // Foreign collection
+                        "_id",              // Local field in dim_actors
+                        "actor_id",         // Foreign field in fact_collection
+                        "facts"             // Resulting field
+                ),
+                // Step 2: Unwind the facts array
+                Aggregates.unwind("$facts", new UnwindOptions().preserveNullAndEmptyArrays(false)),
+                // Step 3: Join fact_collection with dim_category
+                Aggregates.lookup(
+                        "Dim_Categories",         // Foreign collection
+                        "facts.category_id",    // Field in facts
+                        "_id",                  // Field in dim_category
+                        "categories"            // Resulting field
+                ),
+                // Step 4: Group by actor with categories
+                Aggregates.group(
+                        "$name",  // Group by actor name
+                        Accumulators.addToSet("categories", "$categories.name")
+                )
+
+
+        ));
+
+        // Print results
+        for (Document doc : result) {
+            System.out.println(doc.toJson());
+        }
+    }
+
+    /*
+    Which actors have appeared in movies in different video categories?
+     */
+    private static void query6(){}
+
+    private static void query7(){}
+
+    private static void query8(){}
+
+    private static void query9(){}
 }
+
+
+
+
+
+
+
+
+
+
+
+
