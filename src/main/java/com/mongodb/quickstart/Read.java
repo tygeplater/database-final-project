@@ -199,7 +199,44 @@ public class Read {
         }
     }
 
-    private static void query7(){}
+    /*
+    Which actors have not appeared in a comedy?
+     */
+    private static void query7(){
+        // Perform Aggregation
+        AggregateIterable<Document> result = actors.aggregate(Arrays.asList(
+                // Step 1: Join dim_actors with fact_collection
+                Aggregates.lookup(
+                        "Fact_Collection",  // Foreign collection
+                        "_id",              // Local field in dim_actors
+                        "actor_id",         // Foreign field in fact_collection
+                        "facts"             // Resulting field
+                ),
+                // Step 2: Unwind the facts array
+                Aggregates.unwind("$facts", new UnwindOptions().preserveNullAndEmptyArrays(false)),
+                // Step 3: Join fact_collection with dim_category
+                Aggregates.lookup(
+                        "Dim_Categories",    // Foreign collection
+                        "facts.category_id", // Field in facts
+                        "_id",               // Field in dim_category
+                        "categories"         // Resulting field
+                ),
+                // Step 4: Unwind categories array to flatten structure
+                Aggregates.unwind("$categories", new UnwindOptions().preserveNullAndEmptyArrays(false)),
+                // Step 5: Group by actor with distinct categories
+                Aggregates.group(
+                        "$name", // Group by actor name
+                        Accumulators.addToSet("categories", "$categories.name")
+                ),
+                // Step 6: Filter out actors who have been in the "Comedy" category
+                Aggregates.match(Filters.not(Filters.in("categories", Arrays.asList("Comedy"))))
+        ));
+
+        // Print results
+        for (Document doc : result) {
+            System.out.println(doc.toJson());
+        }
+    }
 
     private static void query8(){}
 
