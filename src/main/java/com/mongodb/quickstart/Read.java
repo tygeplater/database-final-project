@@ -3,6 +3,8 @@ package com.mongodb.quickstart;
 import com.mongodb.client.*;
 import com.mongodb.client.model.*;
 import org.bson.Document;
+import org.bson.conversions.Bson;
+import org.bson.json.JsonObject;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -97,10 +99,19 @@ public class Read {
                         "facts"
                 ),
                 Aggregates.unwind("$facts", new UnwindOptions().preserveNullAndEmptyArrays(false)),
-                Aggregates.group("$_id", Accumulators.sum("movieCount", 1))
+                Aggregates.group(new Document("_id", "$_id").append("name", "$name"), // Group by both `_id` and `category_name`
+                        Accumulators.sum("movieCount", 1))
+
         ));
 
-        System.out.println(result);
+        // Print results
+        for (Document doc : result){
+            // System.out.println(doc.toJson());
+            int numMovies = doc.getInteger("movieCount");
+            Document movieDoc = (Document) doc.get("_id");
+            String movieCategory = movieDoc.getString("name");
+            System.out.println(movieCategory + ": " + numMovies);
+        }
     }
 
     /*
