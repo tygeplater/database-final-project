@@ -32,7 +32,8 @@ public class Read {
             directors = finalDB.getCollection("Dim_Directors");
 
             //query1();
-            query3();
+            //query3();
+            query4();
             //query5();
 
             /* examples:
@@ -120,7 +121,35 @@ public class Read {
     categorys are in category
      */
     private static void query4(){
+        AggregateIterable<Document> result = categories.aggregate(Arrays.asList(
+                Aggregates.lookup(
+                        "Fact_Collection", // First lookup: linking categories with facts
+                        "_id",             // Local field to match
+                        "category_id",     // Foreign field to match
+                        "facts"            // Output array field
+                ),
+                Aggregates.unwind("$facts", new UnwindOptions().preserveNullAndEmptyArrays(false)),
+                Aggregates.lookup(
+                        "Dim_Recordings", // Second lookup: linking facts to recordings
+                        "facts.recording_id",   // Local field to match
+                        "_id",                  // Foreign field to match
+                        "recordings"            // Output array field
+                ),
+                Aggregates.unwind("$recordings", new UnwindOptions().preserveNullAndEmptyArrays(false)),
+                Aggregates.group(
+                        new Document("_id", "$_id").append("name", "$name").append("stock_count", "$recordings.stock_count"), // Group by `_id` and `name`
+                        Accumulators.sum("movieCount", 1) // Count movies
+                )
+                //Aggregates.match(Filters.gt("stock_count", 0)) // Filter: inventory_amount > 0
+        ));
 
+        // Print results
+        int length = 0;
+        for (Document doc : result) {
+            System.out.println(doc.toJson());
+            length++;
+        }
+        System.out.println("number of results: " + length);
     }
 
     /*
