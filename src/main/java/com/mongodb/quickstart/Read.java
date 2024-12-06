@@ -163,7 +163,41 @@ public class Read {
     /*
     Which actors have appeared in movies in different video categories?
      */
-    private static void query6(){}
+    private static void query6(){
+        // Perform Aggregation
+        AggregateIterable<Document> result = actors.aggregate(Arrays.asList(
+                // Step 1: Join dim_actors with fact_collection
+                Aggregates.lookup(
+                        "Fact_Collection",  // Foreign collection
+                        "_id",              // Local field in dim_actors
+                        "actor_id",         // Foreign field in fact_collection
+                        "facts"             // Resulting field
+                ),
+                // Step 2: Unwind the facts array
+                Aggregates.unwind("$facts", new UnwindOptions().preserveNullAndEmptyArrays(false)),
+                // Step 3: Join fact_collection with dim_category
+                Aggregates.lookup(
+                        "Dim_Categories",         // Foreign collection
+                        "facts.category_id",    // Field in facts
+                        "_id",                  // Field in dim_category
+                        "categories"            // Resulting field
+                ),
+                // Step 4: Group by actor with categories
+                Aggregates.group(
+                        "$name",  // Group by actor name
+                        Accumulators.addToSet("categories", "$categories.name")
+                ),
+                // Step 5: Filter actors with multiple distinct categories
+                Aggregates.match(Filters.expr(new Document("$gt", Arrays.asList(new Document("$size", "$categories"), 1))))
+
+
+        ));
+
+        // Print results
+        for (Document doc : result) {
+            System.out.println(doc.toJson());
+        }
+    }
 
     private static void query7(){}
 
