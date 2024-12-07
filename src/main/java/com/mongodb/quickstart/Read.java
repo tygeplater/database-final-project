@@ -33,8 +33,9 @@ public class Read {
 
             //query1();
             //query3();
-            query4();
+            //query4();
             //query5();
+            query9();
 
             /* examples:
             // find one document with Filters.eq()
@@ -314,7 +315,43 @@ public class Read {
         }
     }
 
-    private static void query9(){}
+    private static void query9(){
+        // How many actors are in an Action/Adventure movie that sells for over $20?
+        AggregateIterable<Document> result = fact.aggregate(Arrays.asList(
+                // Join with Dim_category to get category names
+                Aggregates.lookup(
+                        "Dim_Categories",
+                        "category_id",
+                        "_id",
+                        "categories"
+                ),
+                Aggregates.unwind("$categories", new UnwindOptions().preserveNullAndEmptyArrays(false)),
+
+                // Match categories that are Action or Adventure
+                Aggregates.match(Filters.in("categories.name", Arrays.asList("Action & Adventure"))),
+
+                // Join with Dim_recording to get prices
+                Aggregates.lookup(
+                        "Dim_Recordings",
+                        "recording_id",
+                        "_id",
+                        "recordings"
+                ),
+                Aggregates.unwind("$recordings", new UnwindOptions().preserveNullAndEmptyArrays(false)),
+
+                // Match recordings with price > 20
+                Aggregates.match(Filters.gt("recordings.price", 20)),
+
+                // Group by actor_id to count distinct actors
+                Aggregates.group("$actor_id"),
+
+                // Count the number of distinct actors
+                Aggregates.group(null, Accumulators.sum("totalActors", 1))
+        ));
+        for (Document doc : result) {
+            System.out.println("Number of actors in an Action & Adventure Movie that sells for more than $20: " + doc.get("totalActors"));
+        }
+    }
 }
 
 
