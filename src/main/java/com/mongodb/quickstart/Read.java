@@ -149,7 +149,11 @@ public class Read {
 
         // Print results
         for (Document doc : result) {
-            System.out.println(doc.toJson());
+            //System.out.println(doc.toJson());
+            int numMovies = doc.getInteger("movieCount");
+            Document movieDoc = (Document) doc.get("_id");
+            String movieCategory = movieDoc.getString("name");
+            System.out.println(movieCategory + ": " + numMovies);
         }
     }
 
