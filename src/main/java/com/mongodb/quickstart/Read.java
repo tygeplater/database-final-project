@@ -32,8 +32,8 @@ public class Read {
             directors = finalDB.getCollection("Dim_Directors");
 
             //query1();
-            //query3();
-            query4();
+            query3();
+            //query4();
             //query5();
 
             /* examples:
@@ -136,9 +136,11 @@ public class Read {
                         "recordings"            // Output array field
                 ),
                 Aggregates.unwind("$recordings", new UnwindOptions().preserveNullAndEmptyArrays(false)),
+                Aggregates.match(Filters.gt("recordings.stock_count", 0)),
                 Aggregates.group(
-                        new Document("_id", "$_id").append("name", "$name").append("stock_count", "$recordings.stock_count"), // Group by `_id` and `name`
-                        Accumulators.sum("movieCount", 1) // Count movies
+                        new Document("_id", "$_id").append("name", "$name"), // Group by `_id` and `name`
+                        Accumulators.sum("movieCount", 1)
+                        // Count movies
                 )
                 //Aggregates.match(Filters.gt("stock_count", 0)) // Filter: inventory_amount > 0
         ));
