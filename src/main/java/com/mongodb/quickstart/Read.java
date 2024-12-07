@@ -32,8 +32,8 @@ public class Read {
             directors = finalDB.getCollection("Dim_Directors");
 
             //query1();
-            query3();
-            //query4();
+            //query3();
+            query4();
             //query5();
 
             /* examples:
@@ -113,11 +113,11 @@ public class Read {
 
         // Print results
         for (Document doc : result){
-            System.out.println(doc.toJson());
-//            int numMovies = doc.getInteger("movieCount");
-//            Document movieDoc = (Document) doc.get("_id");
-//            String movieCategory = movieDoc.getString("name");
-//            System.out.println(movieCategory + ": " + numMovies);
+            //System.out.println(doc.toJson());
+            int numMovies = doc.getInteger("movieCount");
+            Document movieDoc = (Document) doc.get("_id");
+            String movieCategory = movieDoc.getString("name");
+            System.out.println(movieCategory + ": " + numMovies);
         }
     }
 
@@ -127,37 +127,30 @@ public class Read {
     categorys are in category
      */
     private static void query4(){
-        AggregateIterable<Document> result = categories.aggregate(Arrays.asList(
-                Aggregates.lookup(
-                        "Fact_Collection", // First lookup: linking categories with facts
-                        "_id",             // Local field to match
-                        "category_id",     // Foreign field to match
-                        "facts"            // Output array field
-                ),
-                Aggregates.unwind("$facts", new UnwindOptions().preserveNullAndEmptyArrays(false)),
-                Aggregates.lookup(
-                        "Dim_Recordings", // Second lookup: linking facts to recordings
-                        "facts.recording_id",   // Local field to match
-                        "_id",                  // Foreign field to match
-                        "recordings"            // Output array field
-                ),
-                Aggregates.unwind("$recordings", new UnwindOptions().preserveNullAndEmptyArrays(false)),
-                Aggregates.match(Filters.gt("recordings.stock_count", 0)),
-                Aggregates.group(
-                        new Document("_id", "$_id").append("name", "$name"), // Group by `_id` and `name`
-                        Accumulators.sum("movieCount", 1)
-                        // Count movies
-                )
-                //Aggregates.match(Filters.gt("stock_count", 0)) // Filter: inventory_amount > 0
-        ));
+        AggregateIterable<Document> result = categories.aggregate(
+                Arrays.asList(
+                        Aggregates.lookup(
+                                "Fact_Collection",
+                                "_id",
+                                "category_id",
+                                "facts"
+                        ),
+                        Aggregates.lookup(
+                                "Dim_Recordings",
+                                "facts.recording_id",
+                                "_id",
+                                "recordings"
+                        ),
+                        Aggregates.unwind("$recordings", new UnwindOptions().preserveNullAndEmptyArrays(false)),
+                        Aggregates.match(Filters.gt("recordings.stock_count", 0)),
+                        Aggregates.group(new Document("_id", "$_id").append("name", "$name"), // Group by both `_id` and `category_name`
+                                Accumulators.sum("movieCount", 1))
+                ));
 
         // Print results
-        int length = 0;
         for (Document doc : result) {
             System.out.println(doc.toJson());
-            length++;
         }
-        System.out.println("number of results: " + length);
     }
 
     /*
