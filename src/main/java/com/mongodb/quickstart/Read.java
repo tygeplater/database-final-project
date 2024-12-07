@@ -92,26 +92,32 @@ public class Read {
     List the number of videos for each video category.
      */
     private static void query3(){
-        AggregateIterable<Document> result = categories.aggregate(Arrays.asList(
-                Aggregates.lookup(
-                        "Fact_Collection",
-                        "_id",
-                        "category_id",
-                        "facts"
-                ),
-                Aggregates.unwind("$facts", new UnwindOptions().preserveNullAndEmptyArrays(false)),
-                Aggregates.group(new Document("_id", "$_id").append("name", "$name"), // Group by both `_id` and `category_name`
-                        Accumulators.sum("movieCount", 1))
-
+        AggregateIterable<Document> result = categories.aggregate(
+                Arrays.asList(
+                    Aggregates.lookup(
+                            "Fact_Collection",
+                            "_id",
+                            "category_id",
+                            "facts"
+                    ),
+                    Aggregates.lookup(
+                            "Dim_Recordings",
+                            "facts.recording_id",
+                            "_id",
+                            "recordings"
+                    ),
+                    Aggregates.unwind("$recordings", new UnwindOptions().preserveNullAndEmptyArrays(false)),
+                    Aggregates.group(new Document("_id", "$_id").append("name", "$name"), // Group by both `_id` and `category_name`
+                            Accumulators.sum("movieCount", 1))
         ));
 
         // Print results
         for (Document doc : result){
-            // System.out.println(doc.toJson());
-            int numMovies = doc.getInteger("movieCount");
-            Document movieDoc = (Document) doc.get("_id");
-            String movieCategory = movieDoc.getString("name");
-            System.out.println(movieCategory + ": " + numMovies);
+            System.out.println(doc.toJson());
+//            int numMovies = doc.getInteger("movieCount");
+//            Document movieDoc = (Document) doc.get("_id");
+//            String movieCategory = movieDoc.getString("name");
+//            System.out.println(movieCategory + ": " + numMovies);
         }
     }
 
